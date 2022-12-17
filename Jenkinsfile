@@ -31,7 +31,9 @@ pipeline {
     // git rev-list --all
     // git log
     // https://jenkins.dev.darey.io/env-vars.html/
+    // https://www.jenkins.io/doc/book/pipeline/syntax/#when
     COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short=4 HEAD').trim()
+    DOCKER_REGISTRY = "dareyregistry"
     BRANCH = "${env.GIT_BRANCH}"
     TAG = "${env.BRANCH}.${env.COMMIT_HASH}.${env.BUILD_NUMBER}".drop(15)
     DEV_TAG = "${env.BRANCH}.${env.COMMIT_HASH}.${env.BUILD_NUMBER}".drop(7)
@@ -44,6 +46,7 @@ pipeline {
             steps {
                 sh "printenv | sort"
                 echo "${DEV_TAG}.latest"
+
                 script{
                     if (BRANCH.contains ('origin/develop')) {
                         echo 'branch is develop. Setting the DEV Tag'
@@ -75,10 +78,13 @@ pipeline {
         }
     }
 
-    stage('Build-Docker-Image') {
+    stage('Build-Docker-Image on Feature branches') {
+      when { 
+        anyOf { branch 'feature/*';} 
+        }
       steps {
         container('docker') {
-          sh 'docker build -t dareyregistry/java-dashboard:latest .'
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH} .'
         }
       }
     }
@@ -93,10 +99,13 @@ pipeline {
 		  }
      }
     }
-     stage('Push-image-to-docker-registry') {
+     stage('Push-image-to-docker-registry on Feature Branch') {
+      when { 
+        anyOf { branch 'feature/*';} 
+        }
       steps {
         container('docker') {
-          sh 'docker push dareyregistry/java-dashboard:latest'
+          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH}'
       }
     }
     post {
