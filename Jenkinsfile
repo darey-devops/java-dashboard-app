@@ -61,8 +61,9 @@ pipeline {
     stage("Get the Semvar Tag") {
       steps {
         script {
-          CURRENT_TAG = dockerSemvarTaging(env.JOB_NAME, env.VERSION, "get")
+          CURRENT_TAG = dockerSemvarTaging(env.JOB_NAME, env.VERSION, "change")
           echo "${env.CURRENT_TAG}"
+          dockerSemvarTaging(env.JOB_NAME, env.VERSION, "change")
         }
       }
     }
