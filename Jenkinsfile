@@ -62,7 +62,7 @@ pipeline {
       steps {
         script {
           CURRENT_TAG = dockerSemvarTaging(env.JOB_NAME, env.VERSION, "get")
-          echo ${CURRENT_TAG}
+          echo "${env.CURRENT_TAG}"
         }
       }
     }
