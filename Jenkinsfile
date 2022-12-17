@@ -41,6 +41,20 @@ pipeline {
         }
       }
     }
+
+    stage('Unit-Test') {
+        steps {
+          container('maven') {
+            sh 'mvn test'
+         }
+        }
+        post {
+            always {
+                junit 'target/surefire-reports/*.xml'
+            }
+        }
+    }
+
     stage('Build-Docker-Image') {
       steps {
         container('docker') {
