@@ -52,7 +52,7 @@ pipeline {
     stage('Build-Docker-Image') {
       steps {
         container('docker') {
-          sh 'docker build -t dareyregistry/java-app:latest .'
+          sh 'docker build -t dareyregistry/java-dashboard:latest .'
         }
       }
     }
@@ -70,7 +70,7 @@ pipeline {
      stage('Push-image-to-docker-registry') {
       steps {
         container('docker') {
-          sh 'docker push dareyregistry/java-app:latest'
+          sh 'docker push dareyregistry/java-dashboard:latest'
       }
     }
     post {
