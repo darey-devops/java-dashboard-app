@@ -73,7 +73,6 @@ pipeline {
           sh 'docker push dareyregistry/java-app:latest'
       }
     }
-     }
     post {
       always {
         container('docker') {
@@ -82,4 +81,5 @@ pipeline {
       }
     }
   }
+ }
 }
