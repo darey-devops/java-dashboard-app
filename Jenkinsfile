@@ -60,7 +60,7 @@ pipeline {
             sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
         }
 		}
-
+    }
     // stage('Login-Into-Docker') {
     //   steps {
     //     container('docker') {
@@ -75,13 +75,12 @@ pipeline {
       }
     }
      }
+    // post {
+    //   always {
+    //     container('docker') {
+    //       sh 'docker logout'
+    //   }
+    //   }
+    // }
   }
-    post {
-      always {
-        container('docker') {
-          sh 'docker logout'
-      }
-      }
-    }
-   }
-  }
+}
