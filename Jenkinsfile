@@ -1,3 +1,4 @@
+@Library('dockerSemvarTagging') _
 pipeline {
   agent {
     kubernetes {
@@ -34,29 +35,37 @@ pipeline {
     // https://www.jenkins.io/doc/book/pipeline/syntax/#when
     COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short=4 HEAD').trim()
     DOCKER_REGISTRY = "dareyregistry"
-    BRANCH = "${env.GIT_BRANCH}"
-    TAG = "${env.BRANCH}.${env.COMMIT_HASH}.${env.BUILD_NUMBER}".drop(15)
-    DEV_TAG = "${env.BRANCH}.${env.COMMIT_HASH}.${env.BUILD_NUMBER}".drop(7)
-    VERSION = "${env.TAG}"
+    VERSION = "Major"
+    // BRANCH = "${env.GIT_BRANCH}"
+    // TAG = "${env.BRANCH}.${env.COMMIT_HASH}.${env.BUILD_NUMBER}".drop(15)
+    // DEV_TAG = "${env.BRANCH}.${env.COMMIT_HASH}.${env.BUILD_NUMBER}".drop(7)
+    // VERSION = "${env.TAG}"
 }
 
   stages {
 
-    stage("list environment variables") {
-            steps {
-                sh "printenv | sort"
-                echo "${DEV_TAG}.latest"
+    // stage("list environment variables") {
+    //         steps {
+    //             sh "printenv | sort"
+    //             echo "${DEV_TAG}.latest"
+    //             script{
+    //                 if (BRANCH.contains ('origin/develop')) {
+    //                     echo 'branch is develop. Setting the DEV Tag'
+    //                     $VERSION = "${env.DEV_TAG}"
+    //                     echo "${env.VERSION}"
+    //                 }
+    //             }
+    //         }
+    //     }
 
-                script{
-                    if (BRANCH.contains ('origin/develop')) {
-                        echo 'branch is develop. Setting the DEV Tag'
-                        $VERSION = "${env.DEV_TAG}"
-                        echo "${env.VERSION}"
-                    }
-                }
-            }
+    stage("Get the Semvar Tag") {
+      steps {
+        script {
+          CURRENT_TAG = dockerSemvarTaging(env.JOB_NAME, env.VERSION, ‘get’)
+          echo ${CURRENT_TAG}
         }
-
+      }
+    }
     stage('Build-Jar-file') {
       steps {
         container('maven') {
@@ -91,6 +100,15 @@ pipeline {
 
     stage('Build-Docker-Image on Develop Branch') {
       when { branch 'develop'}
+      steps {
+        container('docker') {
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH} .'
+        }
+      }
+    }
+
+    stage('Build-Docker-Image on Release Tag') {
+      when { tag "release-*" }
       steps {
         container('docker') {
           sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH} .'
