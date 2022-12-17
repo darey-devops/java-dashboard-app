@@ -63,7 +63,9 @@ pipeline {
         script {
           CURRENT_TAG = dockerSemvarTaging(env.JOB_NAME, env.VERSION, "change")
           echo "${env.CURRENT_TAG}"
-          dockerSemvarTaging(env.JOB_NAME, env.VERSION, "change")
+          echo "${env.JOB_NAME}"
+          echo "${env.VERSION}"
+          echo dockerSemvarTaging(env.JOB_NAME, env.VERSION, "change")
         }
       }
     }
