@@ -26,9 +26,6 @@ pipeline {
         '''
     }
   }
-  	environment {
-		DOCKERHUB_CREDENTIALS=credentials('docker')
-	}
   stages {
     // stage('Clone') {
     //   steps {
@@ -57,7 +54,7 @@ pipeline {
 			steps {
         container('docker') {
         withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
-            sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
+            sh 'docker login --username=$Docker_registry_user --password=$Docker_registry_password'
         }
 		  }
      }
