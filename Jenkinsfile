@@ -64,8 +64,8 @@ pipeline {
         script {
           echo "${env.JOB_NAME}"
           echo "${env.VERSION}"
-          echo dockerSemvarTaging(env.JOB_NAME, env.VERSION, "get")
-          echo dockerSemvarTaging(env.JOB_NAME, env.VERSION, "change")
+          echo dockerSemvarTaging(env.JOB_NAME, env.VERSION, 'get')
+          echo dockerSemvarTaging(env.JOB_NAME, env.VERSION, 'change')
         }
       }
     }
@@ -96,12 +96,6 @@ pipeline {
         }
       steps {
         container('docker') {
-          script {
-            def userInput = input(
-              id: 'userInput', message: 'Let\'s promote?', parameters: [
-              [$class: 'TextParameterDefinition', defaultValue: 'patch', description: 'Release', name: 'ReleaseVersionType']
-            ])
-          }
           sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH} .'
         }
       }
@@ -121,6 +115,12 @@ pipeline {
       when { tag "release-*" }
       steps {
         container('docker') {
+          script {
+            def userInput = input(
+              id: 'userInput', message: 'Let\'s promote?', parameters: [
+              [$class: 'TextParameterDefinition', defaultValue: 'patch', description: 'Release', name: 'ReleaseVersionType']
+            ])
+          }
           sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH} .'
         }
       }
