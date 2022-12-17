@@ -55,11 +55,12 @@ pipeline {
 		stage('Docker Login') {
 
 			steps {
+        container('docker') {
         withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
-            // some block
             sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
         }
-		}
+		  }
+     }
     }
     // stage('Login-Into-Docker') {
     //   steps {
