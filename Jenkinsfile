@@ -99,7 +99,7 @@ pipeline {
           script {
             def userInput = input(
               id: 'userInput', message: 'Let\'s promote?', parameters: [
-              [$class: 'TextParameterDefinition', defaultValue: 'uat', description: 'Environment', name: 'env']
+              [$class: 'TextParameterDefinition', defaultValue: 'patch', description: 'Release', name: 'ReleaseVersionType']
             ])
           }
           sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH} .'
