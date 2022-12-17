@@ -95,6 +95,10 @@ pipeline {
         }
       steps {
         container('docker') {
+        def userInput = input(
+          id: 'userInput', message: 'Let\'s promote?', parameters: [
+          [$class: 'TextParameterDefinition', defaultValue: 'uat', description: 'Environment', name: 'env']
+        ])
           sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH} .'
         }
       }
@@ -102,6 +106,7 @@ pipeline {
 
     stage('Build-Docker-Image on Develop Branch') {
       when { branch 'develop'}
+
       steps {
         container('docker') {
           sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH} .'
