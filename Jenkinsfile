@@ -27,13 +27,7 @@ pipeline {
     }
   }
   stages {
-    // stage('Clone') {
-    //   steps {
-    //     container('maven') {
-    //       git branch: 'main', changelog: false, poll: false, url: 'https://mohdsabir-cloudside@bitbucket.org/mohdsabir-cloudside/java-app.git'
-    //     }
-    //   }
-    // }  
+
     stage('Build-Jar-file') {
       steps {
         container('maven') {
@@ -73,26 +67,19 @@ pipeline {
 		  }
      }
     }
-    // stage('Login-Into-Docker') {
-    //   steps {
-    //     container('docker') {
-    //       sh 'docker login -u dareyregistry -p Phartion001ng'
-    //   }
-    // }
-    // }
-     stage('Push-Images-Docker-to-DockerHub') {
+     stage('Push-image-to-docker-registry') {
       steps {
         container('docker') {
           sh 'docker push dareyregistry/java-app:latest'
       }
     }
      }
-    // post {
-    //   always {
-    //     container('docker') {
-    //       sh 'docker logout'
-    //   }
-    //   }
-    // }
+    post {
+      always {
+        container('docker') {
+          sh 'docker logout'
+      }
+      }
+    }
   }
 }
