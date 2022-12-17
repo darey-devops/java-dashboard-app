@@ -46,8 +46,8 @@ pipeline {
                 echo "${DEV_TAG}.latest"
                 script{
                     if (BRANCH.contains ('origin/develop')) {
-                        echo 'branch is develop'
-                        $VERSION = "${env.DEV_TAG}.latest"]
+                        echo 'branch is develop. Setting the DEV Tag'
+                        $VERSION = "${env.DEV_TAG}"
                         echo "${env.VERSION}"
                     }
                 }
