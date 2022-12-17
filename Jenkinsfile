@@ -89,6 +89,15 @@ pipeline {
       }
     }
 
+    stage('Build-Docker-Image on Develop Branch') {
+      when { branch 'develop'}
+      steps {
+        container('docker') {
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH} .'
+        }
+      }
+    }
+
 		stage('Docker Login') {
 
 			steps {
@@ -116,5 +125,22 @@ pipeline {
       }
     }
   }
+
+     stage('Push-image-to-docker-registry on Develop Branch') {
+      when { branch 'develop'}
+      steps {
+        container('docker') {
+          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH}'
+      }
+    }
+    post {
+      always {
+        container('docker') {
+          sh 'docker logout'
+      }
+      }
+    }
+  }
+
  }
 }
