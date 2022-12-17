@@ -33,6 +33,7 @@ pipeline {
     // git log
     // https://jenkins.dev.darey.io/env-vars.html/
     // https://www.jenkins.io/doc/book/pipeline/syntax/#when
+    // https://www.jenkins.io/doc/pipeline/steps/pipeline-input-step/
     COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short=4 HEAD').trim()
     DOCKER_REGISTRY = "dareyregistry"
     VERSION = "Major"
@@ -95,10 +96,12 @@ pipeline {
         }
       steps {
         container('docker') {
-        def userInput = input(
-          id: 'userInput', message: 'Let\'s promote?', parameters: [
-          [$class: 'TextParameterDefinition', defaultValue: 'uat', description: 'Environment', name: 'env']
-        ])
+          script {
+            def userInput = input(
+              id: 'userInput', message: 'Let\'s promote?', parameters: [
+              [$class: 'TextParameterDefinition', defaultValue: 'uat', description: 'Environment', name: 'env']
+            ])
+          }
           sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH} .'
         }
       }
