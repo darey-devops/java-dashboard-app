@@ -80,7 +80,7 @@ pipeline {
     stage("Trying out the GitVersion Style") {
       steps {
         container('gitversion') {
-        sh 'gitversion /output buildserver'`
+        sh 'gitversion /output buildserver'
         script {
             def props = readProperties file: 'gitversion.properties'
 
