@@ -1,0 +1,64 @@
+// This will fail because the default agent configured for Jenkins does not have the necessary software to run the stages
+// Also, Jenkins is not aware of the required credentials to connect to Docker hub
+pipeline {
+  agent any
+
+  environment {
+    DOCKER_REGISTRY = "dareyregistry"
+}
+
+  stages {
+
+    stage('Build-Jar-file') {
+      steps {
+        container('maven') {
+          sh 'mvn package'
+        }
+      }
+    }
+
+    stage('Unit-Test') {
+        steps {
+          container('maven') {
+            sh 'mvn test'
+         }
+        }
+        post {
+            always {
+                junit 'target/surefire-reports/*.xml'
+            }
+        }
+    }
+
+    stage('Build-Docker-Image') {
+      steps {
+        container('docker') {
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:latest .'
+        }
+      }
+    }
+
+		stage('Docker Login') {
+
+			steps {
+        container('docker') {
+            sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
+		  }
+     }
+    }
+     stage('Push-image-to-docker-registry') {
+      steps {
+        container('docker') {
+          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:latest'
+      }
+    }
+    post {
+      always {
+        container('docker') {
+          sh 'docker logout'
+      }
+      }
+    }
+  }
+ }
+}
