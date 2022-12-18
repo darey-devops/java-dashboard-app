@@ -29,7 +29,6 @@ pipeline {
   }
 
   environment {
-    COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short=4 HEAD').trim()
     DOCKER_REGISTRY = "dareyregistry"
 }
 
@@ -78,7 +77,7 @@ pipeline {
     }
 
     stage('Build-Docker-Image on Release Tag') {
-      when { branch "release-*" }
+      when { tag "release-*" }
       steps {
         container('docker') {
           script {
