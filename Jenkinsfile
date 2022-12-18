@@ -72,20 +72,20 @@ pipeline {
       }
     }
 
-    stage("Trying out the GitVersion Style") {
-      steps {
-        sh 'gitversion /output buildserver'`
-        script {
-            def props = readProperties file: 'gitversion.properties'
+    // stage("Trying out the GitVersion Style") {
+    //   steps {
+    //     sh 'gitversion /output buildserver'`
+    //     script {
+    //         def props = readProperties file: 'gitversion.properties'
 
-            env.GitVersion_SemVer = props.GitVersion_SemVer
-            env.GitVersion_BranchName = props.GitVersion_BranchName
-            env.GitVersion_AssemblySemVer = props.GitVersion_AssemblySemVer
-            env.GitVersion_MajorMinorPatch = props.GitVersion_MajorMinorPatch
-            env.GitVersion_Sha = props.GitVersion_Sha
-        }
-      }
-    }
+    //         env.GitVersion_SemVer = props.GitVersion_SemVer
+    //         env.GitVersion_BranchName = props.GitVersion_BranchName
+    //         env.GitVersion_AssemblySemVer = props.GitVersion_AssemblySemVer
+    //         env.GitVersion_MajorMinorPatch = props.GitVersion_MajorMinorPatch
+    //         env.GitVersion_Sha = props.GitVersion_Sha
+    //     }
+    //   }
+    // }
 
     stage('Build-Jar-file') {
       steps {
