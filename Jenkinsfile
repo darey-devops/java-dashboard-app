@@ -68,7 +68,7 @@ pipeline {
     stage("Get the Semvar Tag") {
       steps {
         script {
-          // sleep 1000000
+          sleep 1000000
           echo "${env.JOB_NAME}"
           echo "${env.VERSION}"
           echo dockerSemvarTaging(env.JOB_NAME, env.VERSION, 'get')
