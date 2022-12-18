@@ -34,6 +34,7 @@ pipeline {
     // https://jenkins.dev.darey.io/env-vars.html/
     // https://www.jenkins.io/doc/book/pipeline/syntax/#when
     // https://www.jenkins.io/doc/pipeline/steps/pipeline-input-step/
+    // Install gitversion https://gitversion.net/docs/usage/cli/installation
     COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short=4 HEAD').trim()
     DOCKER_REGISTRY = "dareyregistry"
     VERSION = "Major"
@@ -62,6 +63,7 @@ pipeline {
     stage("Get the Semvar Tag") {
       steps {
         script {
+          sleep 1000000
           echo "${env.JOB_NAME}"
           echo "${env.VERSION}"
           echo dockerSemvarTaging(env.JOB_NAME, env.VERSION, 'get')
@@ -69,6 +71,22 @@ pipeline {
         }
       }
     }
+
+    stage("Trying out the GitVersion Style") {
+      steps {
+        sh 'gitversion /output buildserver'`
+        script {
+            def props = readProperties file: 'gitversion.properties'
+
+            env.GitVersion_SemVer = props.GitVersion_SemVer
+            env.GitVersion_BranchName = props.GitVersion_BranchName
+            env.GitVersion_AssemblySemVer = props.GitVersion_AssemblySemVer
+            env.GitVersion_MajorMinorPatch = props.GitVersion_MajorMinorPatch
+            env.GitVersion_Sha = props.GitVersion_Sha
+        }
+      }
+    }
+
     stage('Build-Jar-file') {
       steps {
         container('maven') {
@@ -118,7 +136,7 @@ pipeline {
           script {
             def userInput = input(
               id: 'userInput', message: 'Let\'s promote?', parameters: [
-              [$class: 'TextParameterDefinition', defaultValue: 'patch', description: 'Release', name: 'ReleaseVersionType']
+              [$class: 'TextParameterDefinition', defaultValue: 'Patch', description: 'The Version Type to Release', name: 'ReleaseVersionType']
             ])
           }
           sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH} .'
