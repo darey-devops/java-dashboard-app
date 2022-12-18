@@ -1,0 +1,172 @@
+// We will use Jenkins Shared Library so that our code will remain less cluttered.
+// First we need to connect Jenkins with another Git repository where groovy scripts that has methods/functions can be stored. --> git@github.com:darey-devops/jenkins-shared-libraries.git
+// Then we can call those methods directly from our Jenkinsfile
+// In a continous Delivery pattern, A user is required to manually go in to deploy the release. (either to the registry or to the server/kubernetes based environment). The release logic shows an example of this.
+
+@Library('dockerSemvarTagging') _
+pipeline {
+  agent {
+    kubernetes {
+      yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: maven
+            image: maven:alpine
+            command:
+            - cat
+            tty: true
+          - name: docker
+            image: docker:latest
+            command:
+            - cat
+            tty: true
+            volumeMounts:
+             - mountPath: /var/run/docker.sock
+               name: docker-sock
+          volumes:
+          - name: docker-sock
+            hostPath:
+              path: /var/run/docker.sock    
+        '''
+    }
+  }
+
+  environment {
+    // git rev-list --all
+    // git log
+    // https://jenkins.dev.darey.io/env-vars.html/
+    // https://www.jenkins.io/doc/book/pipeline/syntax/#when
+    // https://www.jenkins.io/doc/pipeline/steps/pipeline-input-step/
+    // Install gitversion https://gitversion.net/docs/usage/cli/installation
+    COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short=4 HEAD').trim()
+    DOCKER_REGISTRY = "dareyregistry"
+    VERSION = "Major"
+    RELEASE_VERSION = dockerSemvarTaging(env.JOB_NAME, env.VERSION, 'get')
+}
+
+  stages {
+    stage('Build-Jar-file') {
+      steps {
+        container('maven') {
+          sh 'mvn package'
+        }
+      }
+    }
+
+    stage('Unit-Test') {
+        steps {
+          container('maven') {
+            sh 'mvn test'
+         }
+        }
+        post {
+            always {
+                junit 'target/surefire-reports/*.xml'
+            }
+        }
+    }
+
+    stage('Build-Docker-Image on Feature branches') {
+      when { 
+        anyOf { branch 'feature/*';} 
+        }
+      steps {
+        container('docker') {
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH} .'
+        }
+      }
+    }
+
+    stage('Build-Docker-Image on Develop Branch') {
+      when { branch 'develop'}
+
+      steps {
+        container('docker') {
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH} .'
+        }
+      }
+    }
+
+    stage('Build-Docker-Image on Release Branch') {
+        when { 
+        anyOf { branch 'release-*';} 
+        }
+      steps {
+        container('docker') {
+          script {
+            def userInput = input(
+              id: 'userInput', message: 'Let\'s promote?', parameters: [
+              [$class: 'TextParameterDefinition', defaultValue: 'Patch', description: 'The Version Type to Release', name: 'ReleaseVersionType']
+            ])
+          }
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:${env.RELEASE_VERSION} .'
+        }
+      }
+    }
+
+		stage('Docker Login') {
+
+			steps {
+        container('docker') {
+        withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
+            sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
+        }
+		  }
+     }
+    }
+     stage('Push-image-to-docker-registry on Feature Branch') {
+      when { 
+        anyOf { branch 'feature/*';} 
+        }
+      steps {
+        container('docker') {
+          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH}'
+      }
+    }
+    post {
+      always {
+        container('docker') {
+          sh 'docker logout'
+      }
+      }
+    }
+  }
+
+     stage('Push-image-to-docker-registry on Develop Branch') {
+      when { branch 'develop'}
+      steps {
+        container('docker') {
+          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH}'
+      }
+    }
+    post {
+      always {
+        container('docker') {
+          sh 'docker logout'
+      }
+      }
+    }
+  }
+
+     stage('Push-image-to-docker-registry on Release Branch') {
+      when { 
+        anyOf { branch 'release-*';} 
+        }
+      steps {
+        container('docker') {
+          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:${env.RELEASE_VERSION}'
+      }
+    }
+    post {
+      always {
+        container('docker') {
+          sh 'docker logout'
+      }
+      }
+    }
+  }
+
+ }
+}
