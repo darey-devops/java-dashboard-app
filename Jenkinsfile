@@ -2,7 +2,7 @@
 pipeline {
   agent {
     kubernetes {
-      yaml '''
+      yaml """
         apiVersion: v1
         kind: Pod
         spec:
@@ -38,8 +38,8 @@ pipeline {
               path: /var/run/docker.sock
           - name: repo
             hostPath:
-              path: '$(pwd)'
-        '''
+              path: "${env.WORKSPACE}"
+        """
     }
   }
 
