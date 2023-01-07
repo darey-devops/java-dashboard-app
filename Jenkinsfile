@@ -41,17 +41,17 @@ pipeline {
   stages {
 
 
-    stage('Retrieve version information') {
-      steps {
-        container('gitversion') {
-          script {
-            def gitversion = sh(returnStdout: true, script: 'gitversion').trim()
-            def version = "${gitversion.GitVersion.SemVer}"
-            sh 'echo "VERSION: ${version}"'
+      stage('Retrieve version information') {
+        steps {
+          container('docker') {
+            script {
+              def gitversion = sh(returnStdout: true, script: 'docker run --rm -v "$(pwd):/repo" gittools/gitversion:latest-linux-net48 /repo').trim()
+              def version = "${gitversion.GitVersion.SemVer}"
+              sh 'echo "VERSION: ${version}"'
+            }
           }
         }
       }
-    }
 
     stage('Build-Jar-file') {
       steps {
