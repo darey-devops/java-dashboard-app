@@ -44,9 +44,11 @@ pipeline {
     stage('Retrieve version information') {
       steps {
         container('gitversion') {
-          def gitversion = sh(returnStdout: true, script: 'gitversion').trim()
-          def version = "${gitversion.GitVersion.SemVer}"
-          sh 'echo "VERSION: ${version}"'
+          script {
+            def gitversion = sh(returnStdout: true, script: 'gitversion').trim()
+            def version = "${gitversion.GitVersion.SemVer}"
+            sh 'echo "VERSION: ${version}"'
+          }
         }
       }
     }
@@ -106,7 +108,7 @@ pipeline {
           // Notice here that even though we are creating a release TAG, our CI is still using a COMMIT_HASH which is not ideal for production.
           // Hence we will need to introduce a special logic to implement Semantic Versioning got releases. So that Major.Minor.Patch values are dynamically calculated and incremented.
           // For this reason, this pipeline is not ready and we cannot have a stage to release on TAG. Not just yet.
-          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:release-${COMMIT_HASH} .'
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:release-${version} .'
         }
       }
     }
