@@ -12,33 +12,6 @@ pipeline {
             command:
             - cat
             tty: true
-          - name: docker
-            image: docker:latest
-            command:
-            - cat
-            tty: true
-            volumeMounts:
-            - mountPath: /var/run/docker.sock
-              name: docker-sock
-            - mountPath: /repo
-              name: repo
-              readOnly: true
-          - name: gitversion
-            image: gittools/gitversion:6.0.0-ubuntu.20.04-7.0
-            command:
-            - cat
-            tty: true
-            volumeMounts:
-            - mountPath: /repo
-              name: repo
-              readOnly: true
-          volumes:
-          - name: docker-sock
-            hostPath:
-              path: /var/run/docker.sock
-          - name: repo
-            hostPath:
-              path: /home/jenkins/agent/workspace
         """
     }
   }
@@ -51,16 +24,16 @@ pipeline {
   stages {
 
       stage('Retrieve version information') {
-        steps {
-          container('docker') {
-            script {
-              sh 'sleep 3000'
-              def gitversion = sh(returnStdout: true, script: 'docker run --rm -v /repo:/repo gittools/gitversion:6.0.0-ubuntu.20.04-7.0 /repo').trim()
-              def version = "${gitversion.GitVersion.SemVer}"
-              sh 'echo "VERSION: ${version}"'
-            }
+          agent {
+              label 'dind-agent'
           }
-        }
+          steps {
+              script {
+                  def gitversion = sh(returnStdout: true, script: 'docker run --rm -v $(pwd):/repo gittools/gitversion:6.0.0-ubuntu.20.04-7.0 /repo').trim()
+                  def version = "${gitversion.GitVersion.SemVer}"
+                  sh 'echo "VERSION: ${version}"'
+              }
+          }
       }
 
     stage('Build-Jar-file') {
