@@ -38,7 +38,7 @@ pipeline {
               path: /var/run/docker.sock
           - name: repo
             hostPath:
-              path: /home/
+              path: /home/jenkins/agent/workspace
         """
     }
   }
