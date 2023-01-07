@@ -45,7 +45,7 @@ pipeline {
         steps {
           container('docker') {
             script {
-              def gitversion = sh(returnStdout: true, script: 'docker run --rm -v "$(pwd):/repo" gittools/gitversion:latest-linux-net48 /repo').trim()
+              def gitversion = sh(returnStdout: true, script: 'docker run --rm -v "$(pwd):/repo" gittools/gitversion:6.0.0-ubuntu.20.04-7.0 /repo').trim()
               def version = "${gitversion.GitVersion.SemVer}"
               sh 'echo "VERSION: ${version}"'
             }
