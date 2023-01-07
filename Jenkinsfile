@@ -38,7 +38,7 @@ pipeline {
               path: /var/run/docker.sock
           - name: repo
             hostPath:
-              path: /home/jenkins/agent/workspace/EY.IO_java-dashboard-app_develop/
+              path: /home/
         """
     }
   }
