@@ -20,6 +20,11 @@ pipeline {
             volumeMounts:
              - mountPath: /var/run/docker.sock
                name: docker-sock
+          - name: gitversion
+            image: gittools/gitversion:latest
+            command:
+            - cat
+            tty: true
           volumes:
           - name: docker-sock
             hostPath:
@@ -34,6 +39,17 @@ pipeline {
 }
 
   stages {
+
+
+    stage('Retrieve version information') {
+      steps {
+        container('gitversion') {
+          def gitversion = sh(returnStdout: true, script: 'gitversion').trim()
+          def version = "${gitversion.GitVersion.SemVer}"
+          sh 'echo "VERSION: ${version}"'
+        }
+      }
+    }
 
     stage('Build-Jar-file') {
       steps {
@@ -141,3 +157,26 @@ pipeline {
 
  }
 }
+
+
+// In the first stage, 'Build-Jar-file', the Maven container builds a JAR file for the application.
+
+// The second stage, 'Unit-Test', runs the unit tests for the application using Maven, and reports the test results using the JUnit plugin.
+
+// The third stage, 'Build-Docker-Image on Feature branches', builds a Docker image for the application when the code is pushed to a feature branch. The image is tagged with the shortened commit hash and the word "feature".
+
+// The fourth stage, 'Build-Docker-Image on Develop Branch', builds a Docker image for the application when the code is pushed to the develop branch. The image is tagged with the shortened commit hash and the word "dev".
+
+// The fifth stage, 'Build-Docker-Image on Release Tag', builds a Docker image for the application when the code is pushed with a release tag. It prompts the user for input before building the image, and tags the image with the shortened commit hash and the word "release".
+
+// The sixth stage, 'Docker Login', logs in to the Docker registry using credentials stored in Jenkins.
+
+// The seventh stage, 'Push-image-to-docker-registry on Feature Branch', pushes the Docker image built in the third stage to the Docker registry when the code is pushed to a feature branch.
+
+// The eighth stage, 'Push-image-to-docker-registry on Develop Branch', pushes the Docker image built in the fourth stage to the Docker registry when the code is pushed to the develop branch.
+
+// The ninth stage, 'Push-image-to-docker-registry on Release Tag', pushes the Docker image built in the fifth stage to the Docker registry when the code is pushed with a release tag.
+
+// Finally, the 'Deploy-to-kubernetes' stage deploys the application to a Kubernetes cluster using the image pushed to the Docker registry in one of the previous stages.
+
+// Overall, this Jenkinsfile defines a pipeline that builds, tests, and deploys a Java-based application using Maven, Docker, and Kubernetes.
