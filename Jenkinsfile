@@ -21,7 +21,7 @@ pipeline {
              - mountPath: /var/run/docker.sock
                name: docker-sock
           - name: gitversion
-            image: gittools/gitversion:latest
+            image: gittools/gitversion:6.0.0-ubuntu.20.04-7.0
             command:
             - cat
             tty: true
