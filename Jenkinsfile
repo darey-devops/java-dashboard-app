@@ -45,7 +45,7 @@ pipeline {
       steps {
         container('gitversion') {
           script {
-            def gitversion = sh(returnStdout: true, script: 'gitversion').trim()
+            def gitversion = sh(returnStdout: true, script: './dotnet-gitversion').trim()
             def version = "${gitversion.GitVersion.SemVer}"
             sh 'echo "VERSION: ${version}"'
           }
