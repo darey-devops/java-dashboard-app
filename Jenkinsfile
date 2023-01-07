@@ -38,7 +38,7 @@ pipeline {
               path: /var/run/docker.sock
           - name: repo
             hostPath:
-              path: "$(pwd)"
+              path: `pwd`
         '''
     }
   }
