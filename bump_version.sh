@@ -60,5 +60,4 @@ echo "New beta version: ${NEW_VERSION}"
 
 # Commit the version bump and push to the remote repository
 git commit -am "Bump version to $NEW_VERSION"
-git push
-https://github.com/darey-devops/java-dashboard-app.git
+git push https://github.com/darey-devops/java-dashboard-app.git
