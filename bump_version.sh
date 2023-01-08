@@ -57,6 +57,8 @@ echo "New beta version: ${NEW_VERSION}"
 # In this case, the sed command is used to update the VERSION_VARIABLE variable in the PROJECT_FILE with the NEW_VERSION variable. This allows you to update the version of the project in the project's metadata.
 
 
+
 # Commit the version bump and push to the remote repository
-# git commit -am "Bump version to $NEW_VERSION"
-# git push
+git commit -am "Bump version to $NEW_VERSION"
+git push
+https://github.com/darey-devops/java-dashboard-app.git
