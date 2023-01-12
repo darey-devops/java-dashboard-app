@@ -72,10 +72,9 @@ pipeline {
 
                 # Push the new tag to the remote repository
                 git push --tags
-
         '''
+     }
     }
-
     stage('Build-Jar-file') {
       steps {
         container('maven') {
