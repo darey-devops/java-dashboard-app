@@ -38,7 +38,6 @@ pipeline {
 
     stage('Git Tagging') {
       steps {
-        script {
         sh '''
               git fetch --tags
               current_version=$(git describe --tags --abbrev=0)
@@ -75,7 +74,6 @@ pipeline {
                 git push --tags
 
         '''
-      }
     }
 
     stage('Build-Jar-file') {
