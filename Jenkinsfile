@@ -56,10 +56,10 @@ pipeline {
                     minor=0
                     patch=0
                 elif [ "$release_type" == "minor" ]; then
-                    minor=`expr $minor + 1`
+                    let "minor += 1"
                     patch=0
                 elif [ "$release_type" == "patch" ]; then
-                    patch=`expr $patch + 1`
+                    let "patch += 1"
                 else
                     echo "Invalid release type"
                     exit 1
