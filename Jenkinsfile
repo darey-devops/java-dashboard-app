@@ -39,6 +39,7 @@ pipeline {
     stage('Git Tagging') {
       steps {
         sh '''
+              echo $SHELL
               git fetch --tags
               current_version=$(git describe --tags --abbrev=0)
               echo "Current Version = $current_version"
