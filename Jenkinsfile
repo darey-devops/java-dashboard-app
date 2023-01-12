@@ -20,6 +20,10 @@ pipeline {
             volumeMounts:
              - mountPath: /var/run/docker.sock
                name: docker-sock
+          volumes:
+          - name: docker-sock
+            hostPath:
+              path: /var/run/docker.sock
         """
     }
   }
@@ -32,7 +36,7 @@ pipeline {
   stages {
 
 
-    stage('Commit and push') {
+    stage('Git Tagging') {
       steps {
         sh '''current_version=$(git describe --tags --abbrev=0)
               echo $current_version
