@@ -38,8 +38,7 @@ pipeline {
 
     stage('Git Tagging') {
       steps {
-        sh '''
-              echo $SHELL
+        script {
               git fetch --tags
               current_version=$(git describe --tags --abbrev=0)
               echo "Current Version = $current_version"
@@ -56,10 +55,10 @@ pipeline {
                     minor=0
                     patch=0
                 elif [ "$release_type" == "minor" ]; then
-                    let "minor += 1"
+                    minor=`expr $minor + 1`
                     patch=0
                 elif [ "$release_type" == "patch" ]; then
-                    let "patch += 1"
+                    patch=`expr $patch + 1`
                 else
                     echo "Invalid release type"
                     exit 1
@@ -74,7 +73,7 @@ pipeline {
                 # Push the new tag to the remote repository
                 git push --tags
 
-        '''
+        }
       }
     }
 
