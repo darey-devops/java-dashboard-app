@@ -48,6 +48,7 @@ pipeline {
               patch=$(echo $current_version | awk -F '.' '{print $3}')
               # Set release type
               release_type="patch"
+              echo "Release type = $release_type"
               # Bump the version based on the release type
                 if [ "$release_type" == "major" ]; then
                     major=$((major+1))
