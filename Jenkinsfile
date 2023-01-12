@@ -57,9 +57,6 @@ pipeline {
 
                 # Create a new tag for the new version
                 git tag -a "$new_version" -m "Release $new_version"
-
-                # Push the new tag to the remote repository
-                git push --tags
         '''
      }
     }
