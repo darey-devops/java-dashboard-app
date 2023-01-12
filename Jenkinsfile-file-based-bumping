@@ -31,13 +31,28 @@ pipeline {
 
   stages {
 
+      stage('Retrieve version information') {
+          agent {
+              label 'dind-agent'
+          }
+          steps {
+              script {
+                  def gitversion = sh(returnStdout: true, script: 'docker run --rm -v $(pwd):/repo gittools/gitversion:6.0.0-ubuntu.20.04-7.0 /repo').trim()
+                  def version = "${gitversion.GitVersion.SemVer}"
+                  sh 'echo "VERSION: ${version}"'
+              }
+          }
+      }
+
 
     stage('Commit and push') {
       steps {
-        sh '''current_version=$(git describe --tags --abbrev=0)
-              echo $current_version
-
-        '''
+        git config --global user.email "jenkins@example.com"
+        git config --global user.name "Jenkins"
+        git commit -am "Commit from Jenkins pipeline"
+        withCredentials([usernamePassword(credentialsId: 'CREDENTIALS_ID', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
+          git push https://${USERNAME}:${PASSWORD}@github.com/repo.git branch-name
+        }
       }
     }
 

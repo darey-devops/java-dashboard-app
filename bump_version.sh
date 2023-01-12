@@ -1,38 +1,31 @@
 #!/bin/bash
-# set -xe 
-PROJECT_FILE_CONTENTS=$(cat PROJECT_FILE)
-echo ${PROJECT_FILE_CONTENTS}
-CURRENT_VERSION=$(echo $PROJECT_FILE_CONTENTS | awk '/^version/ {print $3}')
 
-# Check if the current version is a release version (e.g. 1.2.3) or a prerelease version (e.g. 1.2.3-beta.1)
-# if [[ $CURRENT_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-#   # If the current version is a release version, bump the patch version (e.g. 1.2.3 -> 1.2.4)
-#   NEW_VERSION=$(awk -F. -v CURRENT_VERSION="$CURRENT_VERSION" '{print $1, $2, $3+1}' <<< "$CURRENT_VERSION")
-# else
-#   # If the current version is a prerelease version, bump the prerelease version (e.g. 1.2.3-beta.1 -> 1.2.3-beta.2)
-#   NEW_VERSION=$(echo $CURRENT_VERSION | awk -F '{printf "%d.%d.%d\n", $1,$2,$3+1}')
-# fi
+PROJECT_FILE_CONTENTS=$(cat version_metadata.txt)
+# echo ${PROJECT_FILE_CONTENTS}
+CURRENT_VERSION=$(echo $PROJECT_FILE_CONTENTS | awk '/^version/ {print $3}')
 
 echo "Current Version: ${CURRENT_VERSION}"
 NEW_VERSION=$(awk -F. -v CURRENT_VERSION="$CURRENT_VERSION" '{print $1, $2, $3+1}' <<< "$CURRENT_VERSION")
 echo "New Version" ${NEW_VERSION}
 
-CURRENT_VERSION="1.2.3-beta.1"
-semvar=$(awk -F- -v version="$version" '{print $1}' <<< "$version")
-pre_release=$(awk -F- -v version="$version" '{print $2}' <<< "$version")
-echo "PRE_RELEASE: $pre_release"
-NEW_PRE_RELEASE=$(awk -F. -v pre_release="$pre_release" '{print $1,  $2+1}' <<< "$pre_release")
-# put an if condition here to check if its "beta" or "alpha"
-CONCATENATED_NEW_VERSION="$semvar-$NEW_PRE_RELEASE"
-# if alpha is found, use the below
-# Alpha: Alpha releases are the first versions of a software product that are made available to a small group of testers. Alpha releases are typically unstable and contain many bugs, as they are still under development.
-NEW_VERSION=$(echo $CONCATENATED_NEW_VERSION | sed 's/alpha /alpha./')
+sed -i "s/version = \"[^\"]*\"/version = \"${NEW_VERSION}\"/g" version_metadata.txt
+# Alpha and Beta Logic
+# CURRENT_VERSION="1.2.3-beta.1"
+# semvar=$(awk -F- -v version="$version" '{print $1}' <<< "$version")
+# pre_release=$(awk -F- -v version="$version" '{print $2}' <<< "$version")
+# echo "PRE_RELEASE: $pre_release"
+# NEW_PRE_RELEASE=$(awk -F. -v pre_release="$pre_release" '{print $1,  $2+1}' <<< "$pre_release")
+# # put an if condition here to check if its "beta" or "alpha"
+# CONCATENATED_NEW_VERSION="$semvar-$NEW_PRE_RELEASE"
+# # if alpha is found, use the below
+# # Alpha: Alpha releases are the first versions of a software product that are made available to a small group of testers. Alpha releases are typically unstable and contain many bugs, as they are still under development.
+# NEW_VERSION=$(echo $CONCATENATED_NEW_VERSION | sed 's/alpha /alpha./')
 
-# if beta is found, use the below
-# Beta: Beta releases are the next stage of development after alpha releases. Beta releases are made available to a larger group of testers and are generally more stable than alpha releases. However, beta releases may still contain bugs and other issues that need to be addressed before the final release.
-NEW_VERSION=$(echo $CONCATENATED_NEW_VERSION | sed 's/beta /beta./')
+# # if beta is found, use the below
+# # Beta: Beta releases are the next stage of development after alpha releases. Beta releases are made available to a larger group of testers and are generally more stable than alpha releases. However, beta releases may still contain bugs and other issues that need to be addressed before the final release.
+# NEW_VERSION=$(echo $CONCATENATED_NEW_VERSION | sed 's/beta /beta./')
 
-echo "New beta version: ${NEW_VERSION}"
+# echo "New beta version: ${NEW_VERSION}"
 
 
 # The regular expression ^[0-9]+\.[0-9]+\.[0-9]+$ is used to match a semantic version string in the form X.Y.Z, where X, Y, and Z are integers.
@@ -58,6 +51,6 @@ echo "New beta version: ${NEW_VERSION}"
 
 
 
-# Commit the version bump and push to the remote repository
-git commit -am "Bump version to $NEW_VERSION"
-git push https://github.com/darey-devops/java-dashboard-app.git
+# # Commit the version bump and push to the remote repository
+# git commit -am "Bump version to $NEW_VERSION"
+# git push https://github.com/darey-devops/java-dashboard-app.git
