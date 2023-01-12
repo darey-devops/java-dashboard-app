@@ -39,7 +39,6 @@ pipeline {
     stage('Git Tagging') {
       steps {
         script {
-              which git
                     a = 1
                     b = 2
                     c = a + b
