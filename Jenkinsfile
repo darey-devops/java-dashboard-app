@@ -39,7 +39,7 @@ pipeline {
     stage('Git Tagging') {
       steps {
         sh '''current_version=$(git describe --tags --abbrev=0)
-              echo $current_version
+              echo "Current Version = $current_version"
 
         '''
       }
