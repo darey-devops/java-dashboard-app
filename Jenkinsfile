@@ -56,7 +56,7 @@ pipeline {
                 new_version="$major.$minor.$patch"
 
                 # Create a new tag for the new version
-                git tag -a "$new_version" -m "Release $new_version"
+
         '''
      }
     }
