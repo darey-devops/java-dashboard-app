@@ -12,9 +12,6 @@ pipeline {
             command:
             - cat
             tty: true
-            volumeMounts:
-             - mountPath: /home
-               name: repo-clone
           - name: maven
             image: maven:alpine
             command:
@@ -32,9 +29,7 @@ pipeline {
           - name: docker-sock
             hostPath:
               path: /var/run/docker.sock
-          - name: repo-clone
-            hostPath:
-              path: /home
+
         """
     }
   }
