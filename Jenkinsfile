@@ -51,6 +51,7 @@ pipeline {
       steps {
         container('ubuntu') {
         sh '''
+              sleep 3000
               pwd
               ls -latr
 
