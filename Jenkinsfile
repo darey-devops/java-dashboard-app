@@ -13,7 +13,7 @@ pipeline {
             - cat
             tty: true
             volumeMounts:
-             - mountPath: /home/jenkins/agent
+             - mountPath: /
                name: repo-clone
           - name: maven
             image: maven:alpine
@@ -34,7 +34,7 @@ pipeline {
               path: /var/run/docker.sock
           - name: repo-clone
             hostPath:
-              path: /home/jenkins/agent
+              path: //
         """
     }
   }
