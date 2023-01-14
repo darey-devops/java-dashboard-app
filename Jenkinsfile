@@ -46,7 +46,11 @@ pipeline {
       steps {
         container('ubuntu') {
         sh '''
-              sleep 3000
+              #apt update -y 
+              #apt install git -y
+              #git config --global --add safe.directory /home/jenkins/agent/workspace/EY.IO_java-dashboard-app_develop
+
+              #sleep 3000
               pwd
               ls -latr
 
