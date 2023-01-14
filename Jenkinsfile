@@ -89,14 +89,19 @@ pipeline {
 
     stage('Build-Docker-Image on Release Tag') {
       anyOf { branch 'develop';} 
-      steps {
+      stages {
+        stage {
+          steps {
 
-        container (ubuntu) {
-          sh '''
-          newversion=1.4.7
-          echo "FROM ubuntu step ---> $newversion"
-          '''
+            container (ubuntu) {
+              sh '''
+              newversion=1.4.7
+              echo "FROM ubuntu step ---> $newversion"
+              '''
+            }
+          }
         }
+        stage {
         container('docker') {
           script {
             def userInput = input(
@@ -106,29 +111,11 @@ pipeline {
           }
           sh 'echo "FROM Docker step ---> $newversion"'
           sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${newversion} .'
+         }
         }
       }
-    }
-
-		// stage('Docker Login') {
-
-		// 	steps {
-    //     container('docker') {
-    //     withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
-    //         sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
-    //     }
-		//   }
-    //  }
-    // }
-     stage('Push-image-to-docker-registry on Feature Branch') {
-      when { 
-        anyOf { branch 'feature/*';} 
-        }
-      steps {
-        container('docker') {
-          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH}'
-      }
-    }
+     }
+  }
     post {
       always {
         container('docker') {
@@ -137,21 +124,3 @@ pipeline {
       }
     }
   }
-
-     stage('Push-image-to-docker-registry on Develop Branch') {
-      when { branch 'develop'}
-      steps {
-        container('docker') {
-          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH}'
-      }
-    }
-    post {
-      always {
-        container('docker') {
-          sh 'docker logout'
-      }
-      }
-    }
-  }
- }
-}
