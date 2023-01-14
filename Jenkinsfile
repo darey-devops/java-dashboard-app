@@ -47,7 +47,7 @@ pipeline {
         container('ubuntu') {
         sh '''
               apt update -y 
-              apt install git -y
+              apt install git vim -y
               git config --global --add safe.directory /home/jenkins/agent/workspace/EY.IO_java-dashboard-app_develop
               git fetch --tags
               sleep 3000
