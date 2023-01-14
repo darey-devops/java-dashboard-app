@@ -48,7 +48,7 @@ pipeline {
         sh '''
               apt update -y 
               apt install git -y
-              #git config --global --add safe.directory /home/jenkins/agent/workspace/EY.IO_java-dashboard-app_develop
+              git config --global --add safe.directory /home/jenkins/agent/workspace/EY.IO_java-dashboard-app_develop
               git fetch --tags
               current_version=$(git describe --tags --abbrev=0)
               echo "Current Version = $current_version"
