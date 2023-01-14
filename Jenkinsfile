@@ -59,12 +59,23 @@ pipeline {
     }
 
     stage('Build-Docker-Image') {
-      steps {
-        container('docker') {
-          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:latest .'
+      stages {
+        stage ('Get current release') {
+            steps {
+              container('docker') {
+                sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:latest .'
+              }
+            }
         }
-      }
-    }
+      } 
+    }  
+    // stage('Build-Docker-Image') {
+    //   steps {
+    //     container('docker') {
+    //       sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:latest .'
+    //     }
+    //   }
+    // }
 
 		stage('Docker Login') {
 
