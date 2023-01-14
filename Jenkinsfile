@@ -1,19 +1,19 @@
-// Here we will introduce conditional logic to determine the actions based on the branch doing the build and push
+@Library('dockerSemvarTagging') _
 pipeline {
   agent {
     kubernetes {
-      yaml """
+      yaml '''
         apiVersion: v1
         kind: Pod
         spec:
           containers:
-          - name: ubuntu
-            image: ubuntu:latest
+          - name: maven
+            image: maven:alpine
             command:
             - cat
             tty: true
-          - name: maven
-            image: maven:alpine
+          - name: gitversion
+            image: gittools/gitversion:5.6.6
             command:
             - cat
             tty: true
@@ -29,17 +29,73 @@ pipeline {
           - name: docker-sock
             hostPath:
               path: /var/run/docker.sock
-
-        """
+          - name: repo-clone
+            hostPath:
+              path: /home/jenkins/agent
+        '''
     }
   }
 
   environment {
+    // git rev-list --all
+    // git log
+    // https://jenkins.dev.darey.io/env-vars.html/
+    // https://www.jenkins.io/doc/book/pipeline/syntax/#when
+    // https://www.jenkins.io/doc/pipeline/steps/pipeline-input-step/
+    // Install gitversion https://gitversion.net/docs/usage/cli/installation
     COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short=4 HEAD').trim()
     DOCKER_REGISTRY = "dareyregistry"
+    VERSION = "Major"
+    // BRANCH = "${env.GIT_BRANCH}"
+    // TAG = "${env.BRANCH}.${env.COMMIT_HASH}.${env.BUILD_NUMBER}".drop(15)
+    // DEV_TAG = "${env.BRANCH}.${env.COMMIT_HASH}.${env.BUILD_NUMBER}".drop(7)
+    // VERSION = "${env.TAG}"
 }
 
   stages {
+
+    // stage("list environment variables") {
+    //         steps {
+    //             sh "printenv | sort"
+    //             echo "${DEV_TAG}.latest"
+    //             script{
+    //                 if (BRANCH.contains ('origin/develop')) {
+    //                     echo 'branch is develop. Setting the DEV Tag'
+    //                     $VERSION = "${env.DEV_TAG}"
+    //                     echo "${env.VERSION}"
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    stage("Get the Semvar Tag") {
+      steps {
+        script {
+          sleep 1000000
+          echo "${env.JOB_NAME}"
+          echo "${env.VERSION}"
+          echo dockerSemvarTaging(env.JOB_NAME, env.VERSION, 'get')
+          echo dockerSemvarTaging(env.JOB_NAME, env.VERSION, 'change')
+        }
+      }
+    }
+
+    stage("Trying out the GitVersion Style") {
+      steps {
+        container('gitversion') {
+        sh 'gitversion /output buildserver'
+        script {
+            def props = readProperties file: 'gitversion.properties'
+
+            env.GitVersion_SemVer = props.GitVersion_SemVer
+            env.GitVersion_BranchName = props.GitVersion_BranchName
+            env.GitVersion_AssemblySemVer = props.GitVersion_AssemblySemVer
+            env.GitVersion_MajorMinorPatch = props.GitVersion_MajorMinorPatch
+            env.GitVersion_Sha = props.GitVersion_Sha
+        }
+       }
+      }
+    }
 
     stage('Build-Jar-file') {
       steps {
@@ -84,94 +140,39 @@ pipeline {
     }
 
     stage('Build-Docker-Image on Release Tag') {
-      when { 
-        anyOf { branch 'develop';} }
+      when { tag "release-*" }
       steps {
-        container('ubuntu') {
+        container('docker') {
           script {
             def userInput = input(
-              id: 'userInput', message: 'Set the release type', parameters: [
-              [$class: 'TextParameterDefinition', defaultValue: 'Patch', description: 'Accepted valuse must be "Major", "Minor" or "Patch"', name: 'ReleaseVersionType']
+              id: 'userInput', message: 'Let\'s promote?', parameters: [
+              [$class: 'TextParameterDefinition', defaultValue: 'Patch', description: 'The Version Type to Release', name: 'ReleaseVersionType']
             ])
           }
-        sh '''
-              # Getting the release tag, and creating a bump.
-              apt update -y 
-              apt install git vim -y
-              git config --global --add safe.directory /home/jenkins/agent/workspace/EY.IO_java-dashboard-app_develop
-              git fetch --tags
-              #sleep 3000
-              current_version=$(git describe --tags --abbrev=0)
-              echo "Current Version = $current_version"
-              # Get the current version numbers
-              major=$(echo $current_version | awk -F '.' '{print $1}')
-              minor=$(echo $current_version | awk -F '.' '{print $2}')
-              patch=$(echo $current_version | awk -F '.' '{print $3}')
-              # Set release type
-              release_type="patch"
-              echo "Release type = $release_type"
-              # Bump the version based on the release type
-              // if [ "$release_type" == "major" ]; then
-              //     major=`expr $major + 1`
-              //     minor=0
-              //     patch=0
-              // elif [ "$release_type" == "minor" ]; then
-              //     minor=`expr $minor + 1`
-              //     patch=0
-              // elif [ "$release_type" == "patch" ]; then
-              //     patch=`expr $patch + 1`
-              // else
-              //     echo "Invalid release type"
-              //     exit 1
-              // fi
-              # Create the new version string
-              #new_version="$major.$minor.$patch"
-              new_version="1.4.7"
-              echo "New Version new_version"
-
-              // # Create a new tag for the new version
-              // git tag -a "$new_version" -m "Release $new_version"
-
-              // # Push the new tag to the remote repository
-              // git push --tags
-        '''
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH} .'
         }
-        // container('docker') {
-        //   sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:release-${new_version} .'
-        // }
       }
     }
 
-		// stage('Docker Login') {
+		stage('Docker Login') {
 
-		// 	steps {
-    //     container('docker') {
-    //     withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
-    //         sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
-    //     }
-		//   }
-    //  }
-    // }
-
-    //  stage('Push-image-to-docker-registry on Release Branch') {
-    //   when { 
-    //     anyOf { branch 'develop';} 
-    //     }
-    //   steps {
-    //     container('docker') {
-    //       sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH}'
-    //   }
-    // }
-
-    //  stage('Push-image-to-docker-registry on Feature Branch') {
-    //   when { 
-    //     anyOf { branch 'feature/*';} 
-    //     }
-    //   steps {
-    //     container('docker') {
-    //       sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH}'
-    //   }
-    // }
+			steps {
+        container('docker') {
+        withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
+            sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
+        }
+		  }
+     }
+    }
+     stage('Push-image-to-docker-registry on Feature Branch') {
+      when { 
+        anyOf { branch 'feature/*';} 
+        }
+      steps {
+        container('docker') {
+          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH}'
+      }
+    }
     post {
       always {
         container('docker') {
@@ -179,5 +180,23 @@ pipeline {
       }
       }
     }
-   }
+  }
+
+     stage('Push-image-to-docker-registry on Develop Branch') {
+      when { branch 'develop'}
+      steps {
+        container('docker') {
+          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH}'
+      }
+    }
+    post {
+      always {
+        container('docker') {
+          sh 'docker logout'
+      }
+      }
+    }
+  }
+
  }
+}
