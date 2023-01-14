@@ -63,7 +63,15 @@ pipeline {
         stage ('Get current release') {
             steps {
               container('docker') {
-                sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:latest .'
+                sh 'newversion="1.4.7"'
+              }
+            }
+        }
+        stage ('Build With New Version') {
+            steps {
+              container('docker') {
+                sh ' echo newversion=$newversion'
+                sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:$newversion .'
               }
             }
         }
@@ -77,30 +85,30 @@ pipeline {
     //   }
     // }
 
-		stage('Docker Login') {
+		// stage('Docker Login') {
 
-			steps {
-        container('docker') {
-        withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
-            sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
-        }
-		  }
-     }
-    }
-     stage('Push-image-to-docker-registry') {
-      steps {
-        container('docker') {
-          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:latest'
-      }
-    }
-    post {
-      always {
-        container('docker') {
-          sh 'docker logout'
-      }
-      }
-    }
-  }
+		// 	steps {
+    //     container('docker') {
+    //     withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
+    //         sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
+    //     }
+		//   }
+    //  }
+    // }
+  //    stage('Push-image-to-docker-registry') {
+  //     steps {
+  //       container('docker') {
+  //         sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:latest'
+  //     }
+  //   }
+  //   post {
+  //     always {
+  //       container('docker') {
+  //         sh 'docker logout'
+  //     }
+  //     }
+  //   }
+  // }
 
  }
 }
