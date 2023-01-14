@@ -136,42 +136,42 @@ pipeline {
               // git push --tags
         '''
         }
-        container('docker') {
-          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:release-${new_version} .'
-        }
+        // container('docker') {
+        //   sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:release-${new_version} .'
+        // }
       }
     }
 
-		stage('Docker Login') {
+		// stage('Docker Login') {
 
-			steps {
-        container('docker') {
-        withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
-            sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
-        }
-		  }
-     }
-    }
+		// 	steps {
+    //     container('docker') {
+    //     withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
+    //         sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
+    //     }
+		//   }
+    //  }
+    // }
 
-     stage('Push-image-to-docker-registry on Release Branch') {
-      when { 
-        anyOf { branch 'develop';} 
-        }
-      steps {
-        container('docker') {
-          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH}'
-      }
-    }
+    //  stage('Push-image-to-docker-registry on Release Branch') {
+    //   when { 
+    //     anyOf { branch 'develop';} 
+    //     }
+    //   steps {
+    //     container('docker') {
+    //       sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH}'
+    //   }
+    // }
 
-     stage('Push-image-to-docker-registry on Feature Branch') {
-      when { 
-        anyOf { branch 'feature/*';} 
-        }
-      steps {
-        container('docker') {
-          sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH}'
-      }
-    }
+    //  stage('Push-image-to-docker-registry on Feature Branch') {
+    //   when { 
+    //     anyOf { branch 'feature/*';} 
+    //     }
+    //   steps {
+    //     container('docker') {
+    //       sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:feature-${COMMIT_HASH}'
+    //   }
+    // }
     post {
       always {
         container('docker') {
@@ -179,7 +179,5 @@ pipeline {
       }
       }
     }
-  }
    }
-     }
-      }
+ }
