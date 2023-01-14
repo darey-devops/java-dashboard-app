@@ -41,55 +41,6 @@ pipeline {
 
   stages {
 
-
-    stage('Git Tagging') {
-      steps {
-        container('ubuntu') {
-        sh '''
-              apt update -y 
-              apt install git vim -y
-              git config --global --add safe.directory /home/jenkins/agent/workspace/EY.IO_java-dashboard-app_develop
-              git fetch --tags
-              sleep 3000
-              current_version=$(git describe --tags --abbrev=0)
-              echo "Current Version = $current_version"
-              # Get the current version numbers
-              major=$(echo $current_version | awk -F '.' '{print $1}')
-              minor=$(echo $current_version | awk -F '.' '{print $2}')
-              patch=$(echo $current_version | awk -F '.' '{print $3}')
-              # Set release type
-              release_type="patch"
-              echo "Release type = $release_type"
-              # Bump the version based on the release type
-              if [ "$release_type" == "major" ]; then
-                  major=`expr $major + 1`
-                  minor=0
-                  patch=0
-              elif [ "$release_type" == "minor" ]; then
-                  minor=`expr $minor + 1`
-                  patch=0
-              elif [ "$release_type" == "patch" ]; then
-                  patch=`expr $patch + 1`
-              else
-                  echo "Invalid release type"
-                  exit 1
-              fi
-              # Create the new version string
-              echo "New Version new_version"
-              new_version="$major.$minor.$patch"
-
-              # Create a new tag for the new version
-              git tag -a "$new_version" -m "Release $new_version"
-
-              # Push the new tag to the remote repository
-              git push --tags
-
-
-
-        '''
-        }
-     }
-    }
     stage('Build-Jar-file') {
       steps {
         container('maven') {
@@ -133,19 +84,60 @@ pipeline {
     }
 
     stage('Build-Docker-Image on Release Tag') {
-      when { branch "release-*" }
+      when { 
+        anyOf { branch 'release/sprint-*';} }
       steps {
-        container('docker') {
+        container('ubuntu') {
           script {
             def userInput = input(
-              id: 'userInput', message: 'Let\'s promote?', parameters: [
-              [$class: 'TextParameterDefinition', defaultValue: 'Patch', description: 'The Version Type to Release', name: 'ReleaseVersionType']
+              id: 'userInput', message: 'Set the release type', parameters: [
+              [$class: 'TextParameterDefinition', defaultValue: 'Patch', description: 'Accepted valuse must be "Major", "Minor" or "Patch"', name: 'ReleaseVersionType']
             ])
           }
-          // Notice here that even though we are creating a release TAG, our CI is still using a COMMIT_HASH which is not ideal for production.
-          // Hence we will need to introduce a special logic to implement Semantic Versioning got releases. So that Major.Minor.Patch values are dynamically calculated and incremented.
-          // For this reason, this pipeline is not ready and we cannot have a stage to release on TAG. Not just yet.
-          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:release-${version} .'
+        sh '''
+              # Getting the release tag, and creating a bump.
+              apt update -y 
+              apt install git vim -y
+              git config --global --add safe.directory /home/jenkins/agent/workspace/EY.IO_java-dashboard-app_develop
+              git fetch --tags
+              #sleep 3000
+              current_version=$(git describe --tags --abbrev=0)
+              echo "Current Version = $current_version"
+              # Get the current version numbers
+              major=$(echo $current_version | awk -F '.' '{print $1}')
+              minor=$(echo $current_version | awk -F '.' '{print $2}')
+              patch=$(echo $current_version | awk -F '.' '{print $3}')
+              # Set release type
+              release_type="patch"
+              echo "Release type = $release_type"
+              # Bump the version based on the release type
+              // if [ "$release_type" == "major" ]; then
+              //     major=`expr $major + 1`
+              //     minor=0
+              //     patch=0
+              // elif [ "$release_type" == "minor" ]; then
+              //     minor=`expr $minor + 1`
+              //     patch=0
+              // elif [ "$release_type" == "patch" ]; then
+              //     patch=`expr $patch + 1`
+              // else
+              //     echo "Invalid release type"
+              //     exit 1
+              // fi
+              # Create the new version string
+              #new_version="$major.$minor.$patch"
+              new_version="1.4.7"
+              echo "New Version new_version"
+
+              // # Create a new tag for the new version
+              // git tag -a "$new_version" -m "Release $new_version"
+
+              // # Push the new tag to the remote repository
+              // git push --tags
+        '''
+        }
+        container('docker') {
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:release-${new_version} .'
         }
       }
     }
@@ -185,6 +177,57 @@ pipeline {
           sh 'docker push ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH}'
       }
     }
+
+    stage('Git Tagging') {
+      when { 
+        anyOf { branch 'release/sprint-*';} }
+      steps {
+        container('ubuntu') {
+        sh '''
+              # Getting the release tag, and creating a bump.
+              apt update -y 
+              apt install git vim -y
+              git config --global --add safe.directory /home/jenkins/agent/workspace/EY.IO_java-dashboard-app_develop
+              git fetch --tags
+              #sleep 3000
+              current_version=$(git describe --tags --abbrev=0)
+              echo "Current Version = $current_version"
+              # Get the current version numbers
+              major=$(echo $current_version | awk -F '.' '{print $1}')
+              minor=$(echo $current_version | awk -F '.' '{print $2}')
+              patch=$(echo $current_version | awk -F '.' '{print $3}')
+              # Set release type
+              release_type="patch"
+              echo "Release type = $release_type"
+              # Bump the version based on the release type
+              if [ "$release_type" == "major" ]; then
+                  major=`expr $major + 1`
+                  minor=0
+                  patch=0
+              elif [ "$release_type" == "minor" ]; then
+                  minor=`expr $minor + 1`
+                  patch=0
+              elif [ "$release_type" == "patch" ]; then
+                  patch=`expr $patch + 1`
+              else
+                  echo "Invalid release type"
+                  exit 1
+              fi
+              # Create the new version string
+              new_version="$major.$minor.$patch"
+              echo "New Version new_version"
+
+              # Create a new tag for the new version
+              git tag -a "$new_version" -m "Release $new_version"
+
+              # Push the new tag to the remote repository
+              git push --tags
+        '''
+        }
+     }
+    }
+
+
     post {
       always {
         container('docker') {
