@@ -29,6 +29,9 @@ pipeline {
           - name: docker-sock
             hostPath:
               path: /var/run/docker.sock
+          - name: repo-clone
+            hostPath:
+              path: /home/jenkins/agent
         '''
     }
   }

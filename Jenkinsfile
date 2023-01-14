@@ -34,7 +34,7 @@ pipeline {
               path: /var/run/docker.sock
           - name: repo-clone
             hostPath:
-              path: //
+              path: /
         """
     }
   }
