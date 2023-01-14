@@ -88,8 +88,15 @@ pipeline {
     }
 
     stage('Build-Docker-Image on Release Tag') {
-      when { tag "release-*" }
+      anyOf { branch 'develop';} 
       steps {
+
+        container (ubuntu) {
+          sh '''
+          newversion=1.4.7
+          echo "FROM ubuntu step ---> $newversion"
+          '''
+        }
         container('docker') {
           script {
             def userInput = input(
@@ -97,21 +104,22 @@ pipeline {
               [$class: 'TextParameterDefinition', defaultValue: 'Patch', description: 'The Version Type to Release', name: 'ReleaseVersionType']
             ])
           }
-          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${COMMIT_HASH} .'
+          sh 'echo "FROM Docker step ---> $newversion"'
+          sh 'docker build -t ${DOCKER_REGISTRY}/java-dashboard:dev-${newversion} .'
         }
       }
     }
 
-		stage('Docker Login') {
+		// stage('Docker Login') {
 
-			steps {
-        container('docker') {
-        withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
-            sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
-        }
-		  }
-     }
-    }
+		// 	steps {
+    //     container('docker') {
+    //     withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'Docker_registry_password', usernameVariable: 'Docker_registry_user')]) {
+    //         sh 'docker login -u $Docker_registry_user -p $Docker_registry_password'
+    //     }
+		//   }
+    //  }
+    // }
      stage('Push-image-to-docker-registry on Feature Branch') {
       when { 
         anyOf { branch 'feature/*';} 
