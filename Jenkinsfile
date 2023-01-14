@@ -60,15 +60,30 @@ pipeline {
               release_type="patch"
               echo "Release type = $release_type"
               # Bump the version based on the release type
+              if [ "$release_type" == "major" ]; then
+                  major=`expr $major + 1`
+                  minor=0
+                  patch=0
+              elif [ "$release_type" == "minor" ]; then
+                  minor=`expr $minor + 1`
+                  patch=0
+              elif [ "$release_type" == "patch" ]; then
+                  patch=`expr $patch + 1`
+              else
+                  echo "Invalid release type"
+                  exit 1
+              fi
+              # Create the new version string
+              echo "New Version new_version"
+              new_version="$major.$minor.$patch"
 
-                # Create the new version string
-                echo "New Version new_version"
-                new_version="$major.$minor.$patch"
+              # Create a new tag for the new version
+              git tag -a "$new_version" -m "Release $new_version"
 
-                # Create a new tag for the new version
-              #sleep 3000
-              pwd
-              ls -latr
+              # Push the new tag to the remote repository
+              git push --tags
+
+
 
         '''
         }
